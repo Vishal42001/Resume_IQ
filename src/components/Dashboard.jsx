@@ -2,26 +2,30 @@ import React, { useState } from 'react';
 import { generateContent } from '../services/llm';
 import { PROMPTS } from '../prompts';
 import ReviewerView from './ReviewerView';
-import EditorView from './EditorView';
 import AnalystView from './AnalystView';
 import BehavioralFitView from './BehavioralFitView';
 import HiddenRequirementsView from './HiddenRequirementsView';
 import ChecklistView from './ChecklistView';
-import JobClusteringView from './JobClusteringView';
-import InterviewPrepView from './InterviewPrepView';
+import ComparisonView from './ComparisonView';
+import PredictorView from './PredictorView';
+import TopPerformerManager from './TopPerformerManager';
+import CoverLetterGenerator from './CoverLetterGenerator';
+import BenchmarkView from './BenchmarkView';
+import { INDUSTRY_BENCHMARKS, findClosestRole } from '../data/industryData';
 
 const TABS = [
     { id: 'reviewer', label: 'Review', offline: true, icon: '✓' },
-    { id: 'editor', label: 'Rewrite', offline: false, icon: '✏️' },
     { id: 'analyst', label: 'Analysis', offline: true, icon: '📊' },
+    { id: 'benchmark', label: 'Benchmarking', offline: false, icon: '📈' },
+    { id: 'comparison', label: 'Compare Candidates', offline: false, icon: '📊' },
+    { id: 'predictor', label: 'Success Predictor', offline: false, icon: '🔮' },
+    { id: 'cover_letter', label: 'Cover Letter', offline: false, icon: '📝' },
     { id: 'behavioral_fit', label: 'Behavioral Fit', offline: false, icon: '🎯' },
     { id: 'hidden_requirements', label: 'Hidden Requirements', offline: false, icon: '🔍' },
     { id: 'checklist', label: 'Checklist', offline: true, icon: '☑️' },
-    { id: 'clustering', label: 'Job Clustering', offline: false, icon: '🗂️' },
-    { id: 'interview_prep', label: 'Interview Prep', offline: false, icon: '💬' },
 ];
 
-const Dashboard = ({ resume, jd, model, useLocal, localModel }) => {
+const Dashboard = ({ resume, jd, model, useLocal, localModel, resumes, topPerformers, setTopPerformers }) => {
     const [activeTab, setActiveTab] = useState('reviewer');
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState({
@@ -48,9 +52,6 @@ const Dashboard = ({ resume, jd, model, useLocal, localModel }) => {
             if (activeTab === 'reviewer') {
                 promptTemplate = PROMPTS.REVIEWER;
                 userPrompt = `\n\nRESUME:\n${resume}\n\nJOB DESCRIPTION:\n${jd}`;
-            } else if (activeTab === 'editor') {
-                promptTemplate = PROMPTS.EDITOR;
-                userPrompt = `\n\nORIGINAL RESUME:\n${resume}\n\nTARGET JOB DESCRIPTION:\n${jd}`;
             } else if (activeTab === 'analyst') {
                 promptTemplate = PROMPTS.ANALYST;
                 userPrompt = `\n\nJOB DATA:\n${jd}`;
@@ -63,12 +64,34 @@ const Dashboard = ({ resume, jd, model, useLocal, localModel }) => {
             } else if (activeTab === 'checklist') {
                 promptTemplate = PROMPTS.JOBCOPILOT;
                 userPrompt = `\n\nTASK_TYPE: REQUIREMENT_CHECKLIST\n\nRESUME:\n${resume}\n\nJOB_DESCRIPTION:\n${jd}`;
-            } else if (activeTab === 'clustering') {
-                promptTemplate = PROMPTS.JOBCOPILOT;
-                userPrompt = `\n\nTASK_TYPE: JOB_CLUSTERING\n\nRESUME:\n${resume}\n\nJOB_DESCRIPTIONS:\n${jd}`;
-            } else if (activeTab === 'interview_prep') {
-                promptTemplate = PROMPTS.JOBCOPILOT;
-                userPrompt = `\n\nTASK_TYPE: INTERVIEW_PREP\n\nRESUME:\n${resume}\n\nJOB_DESCRIPTION:\n${jd}`;
+            } else if (activeTab === 'benchmark') {
+                promptTemplate = PROMPTS.BENCHMARK;
+                // Find closest matching role from job description
+                const matchedRole = findClosestRole(jd);
+                const benchmarkData = INDUSTRY_BENCHMARKS[matchedRole];
+                const benchmarkInfo = `\n\nINDUSTRY_BENCHMARK_DATA:\nROLE: ${matchedRole}\nSALARY_RANGES:\n- Junior: $${benchmarkData.salary.junior.min.toLocaleString()} - $${benchmarkData.salary.junior.max.toLocaleString()}\n- Mid: $${benchmarkData.salary.mid.min.toLocaleString()} - $${benchmarkData.salary.mid.max.toLocaleString()}\n- Senior: $${benchmarkData.salary.senior.min.toLocaleString()} - $${benchmarkData.salary.senior.max.toLocaleString()}\nTOP_SKILLS: ${benchmarkData.topSkills.join(', ')}\nMARKET_DEMAND: ${benchmarkData.demandTrend}\nGROWTH_RATE: ${benchmarkData.growthRate}%`;
+                userPrompt = `\n\nRESUME:\n${resume}\n\nJOB_DESCRIPTION:\n${jd}${benchmarkInfo}`;
+            } else if (activeTab === 'comparison') {
+                promptTemplate = PROMPTS.COMPARISON;
+                // For comparison, we need multiple resumes
+                if (resumes && resumes.length > 1) {
+                    const resumesText = resumes.map((r, idx) => `\n\nCANDIDATE ${idx + 1}:\n${r.content}`).join('');
+                    userPrompt = `${resumesText}\n\nJOB_DESCRIPTION:\n${jd}`;
+                } else {
+                    setError('Comparison requires at least 2 resumes. Please upload multiple resumes.');
+                    setLoading(false);
+                    return;
+                }
+            } else if (activeTab === 'predictor') {
+                promptTemplate = PROMPTS.SUCCESS_PREDICTOR;
+                // For predictor, we need top performer profiles
+                if (!topPerformers || topPerformers.length < 3) {
+                    setError('Success Predictor requires at least 3 top performer profiles. Please add them using the manager below.');
+                    setLoading(false);
+                    return;
+                }
+                const performersText = topPerformers.map((p, idx) => `\n\nTOP_PERFORMER_${idx + 1}:\nNAME: ${p.name}\nCONTENT:\n${p.content}`).join('');
+                userPrompt = `\n\nCANDIDATE_RESUME:\n${resume}\n\nJOB_DESCRIPTION:\n${jd}${performersText}`;
             }
 
             const fullPrompt = promptTemplate + userPrompt;
@@ -86,6 +109,24 @@ const Dashboard = ({ resume, jd, model, useLocal, localModel }) => {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Special handler for cover letter generation
+    const handleCoverLetterGenerate = async (companyName, tone, length) => {
+        const promptTemplate = PROMPTS.COVER_LETTER;
+        const userPrompt = `\n\nRESUME:\n${resume}\n\nJOB_DESCRIPTION:\n${jd}\n\nCOMPANY_NAME: ${companyName || 'Not provided'}\n\nTONE: ${tone}\n\nLENGTH: ${length}`;
+        const fullPrompt = promptTemplate + userPrompt;
+
+        const result = await generateContent(fullPrompt, model, useLocal, localModel);
+
+        // Parse and store result
+        const parsedResult = typeof result === 'string' ? JSON.parse(result) : result;
+        setResults(prev => ({
+            ...prev,
+            cover_letter: parsedResult
+        }));
+
+        return parsedResult;
     };
 
     return (
@@ -187,13 +228,28 @@ const Dashboard = ({ resume, jd, model, useLocal, localModel }) => {
             {/* Results Area */}
             <div className="min-h-[500px]">
                 {activeTab === 'reviewer' && <ReviewerView data={results.reviewer} />}
-                {activeTab === 'editor' && <EditorView data={results.editor} />}
                 {activeTab === 'analyst' && <AnalystView data={results.analyst} />}
+                {activeTab === 'benchmark' && <BenchmarkView data={results.benchmark} />}
                 {activeTab === 'behavioral_fit' && <BehavioralFitView data={results.behavioral_fit} />}
                 {activeTab === 'hidden_requirements' && <HiddenRequirementsView data={results.hidden_requirements} />}
                 {activeTab === 'checklist' && <ChecklistView data={results.checklist} />}
-                {activeTab === 'clustering' && <JobClusteringView data={results.clustering} />}
-                {activeTab === 'interview_prep' && <InterviewPrepView data={results.interview_prep} />}
+                {activeTab === 'comparison' && <ComparisonView data={results.comparison} />}
+                {activeTab === 'cover_letter' && (
+                    <CoverLetterGenerator
+                        resume={resume}
+                        jd={jd}
+                        model={model}
+                        useLocal={useLocal}
+                        localModel={localModel}
+                        onGenerate={handleCoverLetterGenerate}
+                    />
+                )}
+                {activeTab === 'predictor' && (
+                    <>
+                        <TopPerformerManager topPerformers={topPerformers} setTopPerformers={setTopPerformers} />
+                        <PredictorView data={results.predictor} />
+                    </>
+                )}
 
                 {!results[activeTab] && !loading && !error && (
                     <div className="flex flex-col items-center justify-center h-96 text-center glass rounded-2xl border-2 border-dashed border-border/50 animate-fade-in">

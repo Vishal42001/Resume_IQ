@@ -46,7 +46,7 @@ Choose and download a model (this will take a few minutes):
 ollama pull llama2
 
 # OR Mistral (7B) - Faster, good for simple tasks
-ollama pull mistral
+ollama pull mistral:7b
 
 # OR Llama 3 (8B) - Better quality, slower
 ollama pull llama3

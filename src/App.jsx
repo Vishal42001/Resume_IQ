@@ -9,6 +9,8 @@ function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [useLocal, setUseLocal] = useState(false); // Local vs Online toggle
   const [localModel, setLocalModel] = useState('llama3'); // Selected local model
+  const [resumes, setResumes] = useState([]); // Multiple resumes for comparison
+  const [topPerformers, setTopPerformers] = useState([]); // Top performer profiles for predictor
 
   useEffect(() => {
     // Check for saved theme preference or default to light mode
@@ -23,6 +25,16 @@ function App() {
     // Check for saved local model preference
     const savedLocalModel = localStorage.getItem('localModel') || 'llama3';
     setLocalModel(savedLocalModel);
+
+    // Load top performers from localStorage
+    const savedTopPerformers = localStorage.getItem('topPerformers');
+    if (savedTopPerformers) {
+      try {
+        setTopPerformers(JSON.parse(savedTopPerformers));
+      } catch (e) {
+        console.error('Failed to load top performers:', e);
+      }
+    }
   }, []);
 
   const toggleTheme = () => {
@@ -37,6 +49,11 @@ function App() {
     setUseLocal(newUseLocal);
     localStorage.setItem('useLocal', newUseLocal.toString());
   };
+
+  // Save top performers to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('topPerformers', JSON.stringify(topPerformers));
+  }, [topPerformers]);
 
   return (
     <div className="min-h-screen pb-20 text-text-main font-sans">
@@ -125,8 +142,8 @@ function App() {
                 >
                   <option value="llama3">Llama 3 (8B)</option>
                   <option value="qwen2.5">Qwen 2.5</option>
+                  <option value="mistral:7b">Mistral (7B)</option>
                   <option value="llama2">Llama 2 (7B)</option>
-                  <option value="mistral">Mistral (7B)</option>
                   <option value="codellama">CodeLlama</option>
                   <option value="phi">Phi</option>
                   <option value="gemma">Gemma</option>
@@ -163,7 +180,7 @@ function App() {
 
           {/* Feature Pills */}
           <div className="flex flex-wrap justify-center gap-4 mt-10">
-            <span className="badge badge-info text-sm py-2 px-4 animate-float">🎯 8 AI Features</span>
+            <span className="badge badge-info text-sm py-2 px-4 animate-float">🎯 5 AI Features</span>
             <span className="badge badge-success text-sm py-2 px-4 animate-float" style={{ animationDelay: '0.2s' }}>✓ ATS Optimized</span>
             <span className="badge badge-info text-sm py-2 px-4 animate-float" style={{ animationDelay: '0.4s' }}>💼 Interview Prep</span>
             <span className={`badge text-sm py-2 px-4 animate-float ${useLocal ? 'badge-success' : 'badge-info'}`} style={{ animationDelay: '0.6s' }}>
@@ -179,6 +196,8 @@ function App() {
             setResume={setResume}
             jd={jd}
             setJd={setJd}
+            resumes={resumes}
+            setResumes={setResumes}
           />
 
           <Dashboard
@@ -187,6 +206,9 @@ function App() {
             model={model}
             useLocal={useLocal}
             localModel={localModel}
+            resumes={resumes}
+            topPerformers={topPerformers}
+            setTopPerformers={setTopPerformers}
           />
         </div>
       </main>
