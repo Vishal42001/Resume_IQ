@@ -5,26 +5,26 @@
 @tailwind utilities;
 
 :root {
-  /* Light Glass UI Theme */
+  /* Light Modern Theme - Purple Accent */
   --bg-main: #ffffff;
   --bg-gradient-start: #f8fafc;
-  --bg-gradient-end: #e2e8f0;
-  --bg-card: rgba(255, 255, 255, 0.7);
-  --bg-card-hover: rgba(255, 255, 255, 0.85);
-  --border: rgba(148, 163, 184, 0.2);
-  --border-hover: rgba(148, 163, 184, 0.4);
+  --bg-gradient-end: #f1f5f9;
+  --bg-card: rgba(255, 255, 255, 0.95);
+  --bg-card-hover: rgba(255, 255, 255, 1);
+  --border: rgba(148, 163, 184, 0.15);
+  --border-hover: rgba(148, 163, 184, 0.3);
   --text-main: #0f172a;
-  --text-muted: #475569;
+  --text-muted: #64748b;
   --text-dim: #94a3b8;
-  --accent: #06b6d4;
-  --accent-hover: #0891b2;
-  --accent-light: rgba(6, 182, 212, 0.1);
-  --secondary: #0ea5e9;
+  --accent: #7c3aed;
+  --accent-hover: #6d28d9;
+  --accent-light: rgba(124, 58, 237, 0.1);
+  --secondary: #8b5cf6;
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
-  --shadow-color: rgba(0, 0, 0, 0.1);
-  --glass-blur: 40px;
+  --shadow-color: rgba(0, 0, 0, 0.08);
+  --glass-blur: 20px;
 }
 
 [data-theme="dark"] {
@@ -165,19 +165,14 @@ body::after {
   padding: 0 2rem;
 }
 
-/* Frosted Glass Card - Apple Style */
+/* Modern Card - Clean Style */
 .card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
   padding: 2rem;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
 }
@@ -204,14 +199,10 @@ body::after {
 }
 
 .card:hover {
-  transform: translateY(-4px);
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
-    0 0 40px rgba(6, 182, 212, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  background: var(--bg-card-hover);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  border-color: var(--border-hover);
 }
 
 /* Buttons */
@@ -252,19 +243,14 @@ body::after {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #06b6d4 0%, #0ea5e9 100%);
+  background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
   color: white;
-  box-shadow:
-    0 4px 20px rgba(6, 182, 212, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow:
-    0 8px 30px rgba(6, 182, 212, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    0 0 20px rgba(6, 182, 212, 0.3);
+  box-shadow: 0 8px 30px rgba(124, 58, 237, 0.5);
 }
 
 .btn-secondary {
@@ -513,7 +499,7 @@ textarea {
 
 /* Gradient Text */
 .gradient-text {
-  background: linear-gradient(135deg, #06b6d4 0%, #0ea5e9 100%);
+  background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -534,7 +520,7 @@ textarea {
 }
 
 .bg-gradient {
-  background: linear-gradient(135deg, #06b6d4 0%, #0ea5e9 100%);
+  background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
 }
 
 /* Responsive */
